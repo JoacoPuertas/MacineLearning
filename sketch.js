@@ -28,6 +28,12 @@ let gifPersona ;
 let estadoInterno = 0;
 let mascaras = 0;
 let mascara = [];
+let objeto = [];
+let ventana = [];
+let giftexto = [];
+let ventanaEmergente = false;
+let cursorArrow, cursorPointer;
+let handCenter = { x: 0, y: 0 }; // Declarar handCenter como objeto con coordenadas iniciales
 // variables codigo antiguo
 let ancho = 1280;
 let alto = 720;
@@ -37,7 +43,7 @@ let gifPlaying = false; // Control de estado del gif
 let handInside = false;
 let handInsideTimer = 0;
 let currentTextAnimation = null;
-
+let isHandClosed;
 function preload() {
   handPose = ml5.handPose();
   gif = loadImage("data/gifcarga.gif");
@@ -58,7 +64,19 @@ function preload() {
   for (let i = 0; i <= 2; i++) {
     mascara[i] = loadImage("data/mascaras/mascara" + i + ".png");
   }
+  for (let i = 0; i <= 1; i++) {
+    objeto[i] = loadImage("data/objetos/objeto" + i + ".png");
+  }
+  for (let i = 0; i <= 0; i++) {
+    ventana[i] = loadImage("data/ventanas/ventana" + i + ".png");
+  }
+  for (let i = 1; i <= 4; i++) {
+    giftexto[0] = null;
+    giftexto[i] = loadImage("data/gifs-text/GIF" + i + ".gif");
+  }
 
+  cursorArrow = loadImage('data/arrow.png'); // Ruta de tu imagen de cursor arrow
+  cursorPointer = loadImage('data/poionter.png'); // Ruta de tu imagen de cursor pointer
 }
 
 function setup() {
@@ -71,7 +89,8 @@ function setup() {
   handPose.detectStart(video, gotHands);
   textSize(24);
   fill(50);
-
+  textLeading(20);
+  textFont('Jersey 15');
   // pantalla 10
   for (let i = 0; i < manosImagenes.length; i++) {
     manoData.push({
@@ -84,7 +103,7 @@ function setup() {
 function draw() {
   // Dibujar el video de la webcam
   image(video, 0, 0, ancho, alto);
-
+  text(estado,50,50);
   // Dependiendo del estado, mostrar diferentes pantallas
   switch (estado) {
     case 0:
@@ -185,7 +204,7 @@ function draw() {
   // // Dibujar el estado de la mano (Cerrada o Abierta) en pantalla
   fill(255, 255, 255);
   textAlign(CENTER, CENTER);
-  textSize(32);
+  textSize(40);
   text(estadoMano, ancho / 2, alto - 30); // Mostrar el estado de la mano en la parte inferior de la pantalla
   // text(handInside, 100, 100);
 }
@@ -217,7 +236,7 @@ function detectHoverAndClick(bx, by, bw, bh, mostrarBoton, callback) {
     }
 
     // Detectar si la mano está cerrada (basado en la distancia entre los dedos)
-    let isHandClosed = isHandClosedCheck(hand);
+    isHandClosed = isHandClosedCheck(hand);
 
     // Si todos los keypoints están dentro del botón y la mano está cerrada, ejecutar el callback
     if (isHovering) {
@@ -384,9 +403,10 @@ function drawHandBoxWithText(hands, textMessage) {
 }
 
 
+
+
 function drawEstado0() {
   image(imagenes[0], 0, 0, ancho, alto);
-
   if (handInside) {
     showGifAndAnimation();
     if (handInsideTimer >= 2700) {
@@ -412,38 +432,47 @@ function drawEstado0() {
 
 function drawEstado1() {
   image(imagenes[2], 0, 0, ancho, alto);
+  push();
+  imageMode(CENTER,CENTER);
+  image(objeto[0],ancho,alto/2);
+  image(objeto[1],150,alto/2 + 100,350,800);
+  pop();
   textAlign(CENTER);
   handInside = false;
-  // Escribir texto en el estado 1
-  let isTextComplete = writeText(
-    "ESTA ES UNA INFOGRAFIA SOBRE MACHINE LEARNING@EN EL MUNDO DEL CINE",
-    ancho / 2,
-    alto / 4,
-    50,
-    0
-  );
 
-  if (isTextComplete) {
-    setTimeout(() => {
-      estado = 2;
-    }, 2000); // Cambiar de estado después de que el texto se haya completado
-  }
+  // Escribir texto en el estado 1
+
+  // let isTextComplete = writeText(
+  //   "ESTA ES UNA INFOGRAFIA@SOBRE MACHINE LEARNING@EN EL MUNDO DEL CINE_",
+  //   ancho / 2,
+  //   alto / 4,
+  //   50,
+  //   0
+  // );
+
+  // if (isTextComplete) {
+  //   setTimeout(() => {
+  //     estado = 2;
+  //   }, 2000); // Cambiar de estado después de que el texto se haya completado
+  // }
 }
 
 function drawEstado2() {
-  push();
+  let over = false;
+  if(!ventanaEmergente) {
+    push();
   blendMode(DIFFERENCE);
   image(imagenes[3], 0, 0, ancho, alto);
   pop();
 
   if (handInside) {
     push();
-
     text("PARA HACER CLICK SOBRE@LOS BOTONES, CERRÁ TU MANO", 500, 350);
     pop();
   }
-  textAlign(CENTER);
-  // Escribir texto en el estado 1
+
+  textAlign(CENTER, TOP);
+
   writeText(
     "PARA COMENZAR, COLOCA@LA PALMA DE TU MANO@SOBRE EL RECUADRO",
     ancho / 2,
@@ -451,19 +480,64 @@ function drawEstado2() {
     50,
     0
   );
-  // Ejecuta la animación de texto del estado 2
-  // Llamamos a la función que detecta hover y clic sobre el botón
-  detectHoverAndClick(150, 290, 350, 350, 0, () => {
-    // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
-    if (manoCerradaDuracion >= tiempoMaximo) {
-      estado = 3; // Cambiar al siguiente estado
+  }
+
+  if (manoCerradaDuracion >= tiempoMaximo) {
+    ventanaEmergente = true;
+  }
+
+  if (ventanaEmergente) {
+    push();
+    imageMode(CENTER);
+    image(ventana[0], ancho / 2, alto / 2, ancho - ancho / 3 - 40, alto - alto / 3);
+
+    fill(197, 191, 191);
+    rectMode(CENTER, CENTER);
+    strokeWeight(4);
+    stroke(51, 51, 51);
+    rect(ancho / 2, alto / 2 + 165, 200, 50);
+
+    fill(0);
+    noStroke();
+    text("entendido", ancho / 2, alto / 2 + 165);
+    pop();
+
+    // Calcula la posición del centro de la mano
+    if (hands.length > 0) {
+      let hand = hands[0].keypoints;
+      handCenter.x = (Math.min(...hand.map(kp => kp.x)) + Math.max(...hand.map(kp => kp.x))) / 2;
+      handCenter.y = (Math.min(...hand.map(kp => kp.y)) + Math.max(...hand.map(kp => kp.y))) / 2;
+
+      // Verifica si la mano está sobre el botón "entendido"
+      let isOverButton = handCenter.x > ancho / 2 - 100 &&
+                         handCenter.x < ancho / 2 + 100 &&
+                         handCenter.y > alto / 2 + 140 &&
+                         handCenter.y < alto / 2 + 190;
+
+      // Dibuja el cursor según la posición de la mano y el estado de hover
+      push();
+      imageMode(CENTER);
+      if (isOverButton) {
+        over = true;
+        image(cursorPointer, handCenter.x, handCenter.y, 24, 24); // Muestra cursor pointer
+      } else {
+        image(cursorArrow, handCenter.x, handCenter.y, 24, 24); // Muestra cursor arrow
+      }
+      pop();
     }
+  }
+
+  detectHoverAndClick(150, 290, 350, 350, 0, () => {
+    // Aquí puedes añadir cualquier otra funcionalidad si es necesario.
   });
-  // push()
-  // fill(255)
-  // rect (150, 290, 350, 350);
-  // pop()
+
+  if(over && isHandClosed) {
+    estado = 3;
+  }
+
 }
+
+
 
 function drawEstado3() {
   push();
