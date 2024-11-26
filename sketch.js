@@ -18,7 +18,7 @@ let manoActual = 0;
 let cantidadManos = 19;
 let manoData = [];
 let manosfinalizada = false;
-let intervaloManos = 15;
+let intervaloManos = 5;
 let frameCounter = 0;
 let opennessPercentage;
 let ejMotionCapture;
