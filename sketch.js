@@ -28,7 +28,6 @@ let gifPersona ;
 let estadoInterno = 0;
 let mascaras = 0;
 let mascara = [];
-let jersey;
 // variables codigo antiguo
 let ancho = 1280;
 let alto = 720;
@@ -59,7 +58,6 @@ function preload() {
   for (let i = 0; i <= 2; i++) {
     mascara[i] = loadImage("data/mascaras/mascara" + i + ".png");
   }
-  jersey = loadImage("data/Jersey15-Regular.ttf")
 }
 
 function setup() {
@@ -72,7 +70,7 @@ function setup() {
   handPose.detectStart(video, gotHands);
   textSize(24);
   fill(50);
-  textFont(jersey);
+
   // pantalla 10
   for (let i = 0; i < manosImagenes.length; i++) {
     manoData.push({
