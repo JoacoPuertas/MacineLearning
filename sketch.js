@@ -8,7 +8,7 @@ let logo;
 let handPose;
 let video;
 let hands = [];
-let estado = 10; // Control de las pantallas/estados
+let estado = 11; // Control de las pantallas/estados
 let boton1 = { x: 185, y: 405, w: 200, h: 210 }; // Definimos las coordenadas del botón cuadrado
 let estadoMano = ""; // Variable para almacenar el estado de la mano (abierta o cerrada)
 let manoCerradaDuracion = 0; // Contador para la duración de la mano cerrada
@@ -29,6 +29,9 @@ let gifPersona ;
 let estadoInterno = 0;
 let mascaras = 0;
 let mascara = [];
+let ia;
+let tradicional;
+let pc= [];
 // variables codigo antiguo
 let ancho = 1280;
 let alto = 720;
@@ -64,10 +67,16 @@ function preload() {
   for (let i = 0; i <= 5; i++) {
     logos[i] = loadImage("data/logos/logo" + i + ".png");
   }
-  
   for (let i = 0; i <= 2; i++) {
-    mascara[i] = loadImage("data/mascaras/mascara" + i + ".png");
+    mascara[i] = loadImage("data/mascaras/" + i + ".png");
   }
+
+  for (let i = 0; i <= 3; i++) {
+    pc[i] = loadImage("data/pc/" + i + ".png");
+  }
+  //carpetitas
+  ia = loadImage("data/ia.png");
+  tradicional = loadImage("data/tradicional.png");
 
   //Cursor
   cursorArrow = loadImage("data/arrow.png");
@@ -1054,39 +1063,37 @@ function drawEstado10() {
 
 function drawEstado11() {
   push();
-  blendMode(DIFFERENCE);
-  image(imagenes[11], 0, 0, ancho, alto);
+  image(imagenes[6], 0, 0, ancho, alto);
+  imageMode(CENTER);
+  image(ia, ancho/3,alto/2,350,350);
+  image(tradicional,ancho - ancho/3,alto/2 - 12, 350,350);
   pop();
- let texto1 = writeText(
-    "!MUY BIEN!\n YA APRENDISTE CÓMO FUNCIONA \nLA INTELIGENCIA ARTIFICIAL \nQUE DETECTA AL CUERPO HUMANO",
-    ancho / 2,
-    alto / 4,
-    50,
-    0
-  );
-  if (texto1) {
-    setTimeout(() => {
-      estado = 14;
-    }, 2000); // Cambiar de estado después de que el texto se haya completado
-  }
+  push();
+  rectMode(CENTER);
+  detectHoverAndClick(ancho/3, alto/2, 350, 350, 1, () => {
+    // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+    if (manoCerradaDuracion >= tiempoMaximo) {
+      estado = 12; // Cambiar al siguiente estado
+    }
+  });
+  detectHoverAndClick(ancho - ancho/3,alto/2, 350, 350, 1, () => {
+    // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+    if (manoCerradaDuracion >= tiempoMaximo) {
+      estado = 13; // Cambiar al siguiente estado
+    }
+  });
+  drawHandBoxWithText(hands, " ");
+  pop();
 }
 
 function drawEstado12() {
   push();
-  blendMode(DIFFERENCE);
-  image(imagenes[11], 0, 0, ancho, alto);
+  image(imagenes[6], 0, 0, ancho, alto);
+  imageMode(CENTER);
+  image(pc[0],ancho/2,alto/2);
   pop();
   textAlign(CENTER, TOP);
-  writeText(
-    "AHORA VEAMOS\nCÓMO SE APLICA EN EL CINE",
-    ancho / 2,
-    alto / 4,
-    50,
-    0
-  );
-
-  boton("CONTINUAR", ancho / 2, alto - alto / 3, 300, 100, 160, 51, 142);
-
+  boton("CERRAR", ancho / 2, alto - alto / 3, 300, 100, 160, 51, 142);
   detectHoverAndClick(
     ancho / 2 - 150,
     alto - alto / 3 - 150,
@@ -1096,37 +1103,35 @@ function drawEstado12() {
     () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
-        estado = 15; // Cambiar al siguiente estado
+        estado = 11; // Cambiar al siguiente estado
         manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       }
     }
   );
-
-  if (handInside) {
-    boton("CONTINUAR", ancho / 2, alto - alto / 3, 300, 100, 51, 160, 72);
-  }
 }
 
 function drawEstado13() {
   push();
-  blendMode(DIFFERENCE);
-  image(imagenes[13], 0, 0, ancho, alto);
+  image(imagenes[6], 0, 0, ancho, alto);
+  imageMode(CENTER);
+  image(pc[2],ancho/2,alto/2);
   pop();
   textAlign(CENTER, TOP);
-  let texto1= writeText(
-    "ANTES EN EL CINE SE USABAN\nTRAJES Y PRODUCTOS MUY COSTOSOS",
-    ancho / 2,
-    alto / 4,
-    50,
-    0
+  boton("CERRAR", ancho / 2, alto - alto / 3, 300, 100, 160, 51, 142);
+  detectHoverAndClick(
+    ancho / 2 - 150,
+    alto - alto / 3 - 150,
+    300,
+    300,
+    0,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+        estado = 11; // Cambiar al siguiente estado
+        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+      }
+    }
   );
-
-  
-  if (texto1) {
-    setTimeout(() => {
-      estado = 16;
-    }, 2000); // Cambiar de estado después de que el texto se haya completado
-  }
 }
 
 function drawEstado16() {
