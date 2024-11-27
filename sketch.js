@@ -8,7 +8,7 @@ let logo;
 let handPose;
 let video;
 let hands = [];
-let estado = 11; // Control de las pantallas/estados
+let estado = 0; // Control de las pantallas/estados
 let boton1 = { x: 185, y: 405, w: 200, h: 210 }; // Definimos las coordenadas del botón cuadrado
 let estadoMano = ""; // Variable para almacenar el estado de la mano (abierta o cerrada)
 let manoCerradaDuracion = 0; // Contador para la duración de la mano cerrada
@@ -205,6 +205,8 @@ function draw() {
     reiniciar();
     volver();
   }
+
+  text(estado,100, 50);
   // drawHandBoxWithText(hands, " ");
   // // Dibujar las manos detectadas
   // for (let i = 0; i < hands.length; i++) {
@@ -1052,6 +1054,7 @@ function drawEstado10() {
     contador++;
     if (contador > 180) {
       estado = 11;
+      contador = 0;
     }
   }
   // Llamar a la función con el mensaje deseado
@@ -1069,14 +1072,13 @@ function drawEstado11() {
   image(tradicional,ancho - ancho/3,alto/2 - 12, 350,350);
   pop();
   push();
-  rectMode(CENTER);
-  detectHoverAndClick(ancho/3, alto/2, 350, 350, 1, () => {
+  detectHoverAndClick(ancho/5.5, alto/4, 350, 350, 1, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       estado = 12; // Cambiar al siguiente estado
     }
   });
-  detectHoverAndClick(ancho - ancho/3,alto/2, 350, 350, 1, () => {
+  detectHoverAndClick(ancho - ancho/2.1,alto/4, 350, 350, 1, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       estado = 13; // Cambiar al siguiente estado
@@ -1090,13 +1092,11 @@ function drawEstado12() {
   push();
   image(imagenes[6], 0, 0, ancho, alto);
   imageMode(CENTER);
-  image(pc[0],ancho/2,alto/2);
+  image(pc[2],ancho/2,alto/2);
   pop();
-  textAlign(CENTER, TOP);
-  boton("CERRAR", ancho / 2, alto - alto / 3, 300, 100, 160, 51, 142);
   detectHoverAndClick(
-    ancho / 2 - 150,
-    alto - alto / 3 - 150,
+    ancho / 2 + 150,
+    alto - alto / 3,
     300,
     300,
     0,
@@ -1114,10 +1114,25 @@ function drawEstado13() {
   push();
   image(imagenes[6], 0, 0, ancho, alto);
   imageMode(CENTER);
-  image(pc[2],ancho/2,alto/2);
+  image(pc[0],ancho/2,alto/2);
   pop();
-  textAlign(CENTER, TOP);
-  boton("CERRAR", ancho / 2, alto - alto / 3, 300, 100, 160, 51, 142);
+  detectHoverAndClick(
+    ancho / 2 + 150,
+    alto - alto / 3 ,
+    300,
+    300,
+    0,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+        estado = 11; // Cambiar al siguiente estado
+        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+      }
+    }
+  );
+
+  //BOTONES ARRIBA
+  //BOTON IZQUIERDA
   detectHoverAndClick(
     ancho / 2 - 150,
     alto - alto / 3 - 150,
