@@ -57,6 +57,8 @@ let mostrarventana = 0;
 let etrenando = 0;
 let estado12 = false;
 let estado13 = false;
+let modeBlend = false;
+let circlegif;
 function preload() {
   handPose = ml5.handPose();
   faceMesh = ml5.faceMesh(options);
@@ -70,12 +72,8 @@ function preload() {
     manosImagenes[i] = loadImage("data/manos/" + i + ".png");
   }
   tradicionalFinal = loadImage("data/tradicionalfinal.gif");
-  ejMotionCapture = loadImage("data/captureMotion.gif");
   gifMachineLearning = loadImage("data/gifmachinelearning.gif");
   gifPersona = loadImage("data/visual.gif");
-  for (let i = 0; i <= 5; i++) {
-    logos[i] = loadImage("data/logos/logo" + i + ".png");
-  }
   for (let i = 0; i <= 3; i++) {
     mascara[i] = loadImage("data/mascaras/" + i + ".png");
   }
@@ -95,6 +93,7 @@ function preload() {
   //Gif
   entrenando = loadImage ("data/entrenando.gif");
   logo = loadImage("data/logo.png");
+  circlegif = loadImage("data/circle.gif");
 }
 
 function setup() {
@@ -551,36 +550,59 @@ function ventana2(x, y, height, title) {
 
 
 function drawEstado0() {
-  image(imagenes[0], 0, 0, ancho, alto);
+  push();
+  image(imagenes[0], 0, 0, ancho, alto);  // Imagen normal sin blendMode// Si hay caras detectadas, activar el blendMode
+  if (faces.length > 0 ) {  // Solo cambiar blendMode cuando se detecta una cara y aún no se ha activado
+    modeBlend = true;
+    blendMode(DIFFERENCE);  // Cambiar el blendMode solo una vez
+    fill(0,255,0);
+    rect(0,0,ancho,alto);
+  }
+
+  // Si no hay caras, restablecer el blendMode a normal
+  
+  if (faces.length === 0 && modeBlend) {
+    modeBlend = false;
+    blendMode(BLEND);  // Restablecer a modo normal
+  }
+
+  // Dibujar la imagen normal o con el efecto de blendMode según el estado de modeBlend
+  
+  
+pop();
+
+  // Mostrar animación y gif si la mano está dentro
   if (handInside) {
     showGifAndAnimation();
     if (handInsideTimer >= 2700) {
       estado = 1;
       handInsideTimer = 0;
       gifPlaying = false;
-      // initText(
-      //   "ESTA ES UNA INFOGRAFIA SOBRE MACHINE LEARNING@EN EL MUNDO DEL CINE",
-      //   ancho / 2,
-      //   alto / 2,
-      //   50,
-      //   2000
-      // );
       handInside = false;
     }
   } else {
     handInsideTimer = 0;
     gifPlaying = false;
   }
+
   // Llamamos a la función que detecta hover y clic sobre el botón
   detectHoverAndClick(boton1.x, boton1.y, boton1.w, boton1.h, 1, () => {});
+  push();
+  blendMode(DIFFERENCE);
+  imageMode(CENTER,CENTER);
+  image(circlegif,280, alto - alto/3.7,350,350);
+  
+  pop();
 }
+
 
 function drawEstado1() {
   image(imagenes[2], 0, 0, ancho, alto);
+  push();
   textAlign(CENTER,TOP);
   handInside = false;
   // Escribir texto en el estado 1
-  push();
+  
   textSize(50);
   textLeading(48);
   let isTextComplete = writeText(
@@ -606,19 +628,27 @@ function drawEstado2() {
 
   if (handInside) {
     push();
-
-    text("PARA HACER CLICK SOBRE@LOS BOTONES, CERRÁ TU MANO", 500, 350);
+    writeText(
+      "PARA HACER CLICK SOBRE\nLOS BOTONES, CERRÁ TU MANO",
+      ancho / 2,
+      alto / 4,
+      50,
+      0
+    );
     pop();
   }
   textAlign(CENTER);
   // Escribir texto en el estado 1
-  writeText(
-    "PARA COMENZAR, COLOCA@LA PALMA DE TU MANO@SOBRE EL RECUADRO",
+  if (!handInside) {
+    writeText(
+    "PARA COMENZAR, COLOCA\nLA PALMA DE TU MANO\nSOBRE EL RECUADRO",
     ancho / 2,
     alto / 4,
     50,
     0
   );
+  }
+  
   // Ejecuta la animación de texto del estado 2
   // Llamamos a la función que detecta hover y clic sobre el botón
   detectHoverAndClick(150, 290, 350, 350, 0, () => {
