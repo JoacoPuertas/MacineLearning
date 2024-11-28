@@ -8,7 +8,7 @@ let logo;
 let handPose;
 let video;
 let hands = [];
-let estado = 0; // Control de las pantallas/estados
+let estado = 10; // Control de las pantallas/estados
 let boton1 = { x: 185, y: 405, w: 200, h: 210 }; // Definimos las coordenadas del botón cuadrado
 let estadoMano = ""; // Variable para almacenar el estado de la mano (abierta o cerrada)
 let manoCerradaDuracion = 0; // Contador para la duración de la mano cerrada
@@ -49,7 +49,8 @@ let altoEstado10 = 150;
 let anchorect,altorect;
 let mostrarventana = 0;
 let etrenando = 0;
-
+let estado12 = false;
+let estado13 = false;
 function preload() {
   handPose = ml5.handPose();
   gif = loadImage("data/gifcarga.gif");
@@ -207,7 +208,7 @@ function draw() {
   }
 
   text(estado,100, 50);
-  // drawHandBoxWithText(hands, " ");
+  drawHandBoxWithText(hands, " ");
   // // Dibujar las manos detectadas
   // for (let i = 0; i < hands.length; i++) {
   //   let hand = hands[i];
@@ -1086,6 +1087,10 @@ function drawEstado11() {
   });
   drawHandBoxWithText(hands, " ");
   pop();
+
+  if (estado12 && estado13) {
+    estado = 14;
+  }
 }
 
 function drawEstado12() {
@@ -1095,19 +1100,21 @@ function drawEstado12() {
   image(pc[2],ancho/2,alto/2);
   pop();
   detectHoverAndClick(
-    ancho / 2 + 150,
-    alto - alto / 3,
+    ancho / 2 + 75,
+    alto / 3 + 200,
     300,
     300,
-    0,
+    1,
     () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
         estado = 11; // Cambiar al siguiente estado
+        estado12 = true;
         manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       }
     }
   );
+  drawHandBoxWithText(hands, " ");
 }
 
 function drawEstado13() {
@@ -1117,19 +1124,21 @@ function drawEstado13() {
   image(pc[0],ancho/2,alto/2);
   pop();
   detectHoverAndClick(
-    ancho / 2 + 150,
-    alto - alto / 3 ,
+    ancho / 2 + 75,
+    alto / 3 + 200,
     300,
     300,
-    0,
+    1,
     () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
         estado = 11; // Cambiar al siguiente estado
+        estado13 = true;
         manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       }
     }
   );
+
 
   //BOTONES ARRIBA
   //BOTON IZQUIERDA
@@ -1147,9 +1156,10 @@ function drawEstado13() {
       }
     }
   );
+  drawHandBoxWithText(hands, " ");
 }
 
-function drawEstado16() {
+function drawEstado14() {
   push();
   blendMode(DIFFERENCE);
   image(imagenes[13], 0, 0, ancho, alto);
