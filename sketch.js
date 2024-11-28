@@ -6,9 +6,12 @@ let cursorArrow, cursorPointer;
 let agrandar = true;
 let logo;
 let handPose;
+let faceMesh;
+let options = { maxFaces: 1, refineLandmarks: false, flipped: false };
 let video;
 let hands = [];
-let estado = 10; // Control de las pantallas/estados
+let faces = [];
+let estado = 17; // Control de las pantallas/estados
 let boton1 = { x: 185, y: 405, w: 200, h: 210 }; // Definimos las coordenadas del botón cuadrado
 let estadoMano = ""; // Variable para almacenar el estado de la mano (abierta o cerrada)
 let manoCerradaDuracion = 0; // Contador para la duración de la mano cerrada
@@ -53,6 +56,7 @@ let estado12 = false;
 let estado13 = false;
 function preload() {
   handPose = ml5.handPose();
+  faceMesh = ml5.faceMesh(options);
   gif = loadImage("data/gifcarga.gif");
   alerta = loadImage("data/alerta.png");
   for (let i = 0; i < 14; i++) {
@@ -68,7 +72,7 @@ function preload() {
   for (let i = 0; i <= 5; i++) {
     logos[i] = loadImage("data/logos/logo" + i + ".png");
   }
-  for (let i = 0; i <= 2; i++) {
+  for (let i = 0; i <= 3; i++) {
     mascara[i] = loadImage("data/mascaras/" + i + ".png");
   }
 
@@ -98,6 +102,7 @@ function setup() {
   video.hide();
   // Iniciar la detección de manos
   handPose.detectStart(video, gotHands);
+  faceMesh.detectStart(video, gotFaces);
   textSize(24);
   fill(50);
 
@@ -202,7 +207,7 @@ function draw() {
   
     // Agregar más pantallas si es necesario
   }
-  if (estado >= 4){
+  if (estado >= 4 && estado != 17){
     reiniciar();
     volver();
   }
@@ -231,6 +236,10 @@ function draw() {
 // Callback que recibe las predicciones de las manos
 function gotHands(results) {
   hands = results; // Guardar las predicciones de las manos
+}
+
+function gotFaces(results){
+  faces = results;
 }
 
 // Función que detecta el hover y clic sobre un botón cuadrado
@@ -1073,13 +1082,13 @@ function drawEstado11() {
   image(tradicional,ancho - ancho/3,alto/2 - 12, 350,350);
   pop();
   push();
-  detectHoverAndClick(ancho/5.5, alto/4, 350, 350, 1, () => {
+  detectHoverAndClick(ancho/5.5, alto/4, 350, 300, 1, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       estado = 12; // Cambiar al siguiente estado
     }
   });
-  detectHoverAndClick(ancho - ancho/2.1,alto/4, 350, 350, 1, () => {
+  detectHoverAndClick(ancho - ancho/2.1,alto/4, 300, 250, 1, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       estado = 13; // Cambiar al siguiente estado
@@ -1089,7 +1098,23 @@ function drawEstado11() {
   pop();
 
   if (estado12 && estado13) {
-    estado = 14;
+    boton("CONTINUAR", ancho / 2,  alto / 1.25, 175, 70);
+
+  detectHoverAndClick(
+    ancho / 2 -130,
+    alto - alto /3,
+    300,
+    200,
+    1,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+         // Cambiar al siguiente estado
+        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+        estado = 14;
+      }
+    }
+  );
   }
 }
 
@@ -1139,97 +1164,202 @@ function drawEstado13() {
     }
   );
 
-
-  //BOTONES ARRIBA
-  //BOTON IZQUIERDA
-  detectHoverAndClick(
-    ancho / 2 - 150,
-    alto - alto / 3 - 150,
-    300,
-    300,
-    0,
-    () => {
-      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
-      if (manoCerradaDuracion >= tiempoMaximo) {
-        estado = 11; // Cambiar al siguiente estado
-        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
-      }
-    }
-  );
   drawHandBoxWithText(hands, " ");
 }
 
 function drawEstado14() {
   push();
-  blendMode(DIFFERENCE);
-  image(imagenes[13], 0, 0, ancho, alto);
+  image(imagenes[6], 0, 0, ancho, alto);
+  image(imagenes[7], 0, 0, ancho, alto);
   pop();
-  textAlign(CENTER, TOP);
-  writeText(
-    "ADEMÁS, LLEVABAN MUCHO TIEMPO DE\nEJECUCIÓN PARA DETECTAR EL\nMOVIMIENTO DE PERSONAS",
-    ancho / 2,
-    alto / 4,
-    50,
-    0
-  );
-
-  boton("VER EJEMPLOS", ancho - ancho / 7, alto - alto / 8, 300, 100, 160, 51, 142);
-
+  push();
   detectHoverAndClick(
-    ancho - ancho / 7 - 150,
-    alto - alto / 8 - 150,
+    0 ,
+     alto /2 -120,
     300,
-    300,
-    0,
+    200,
+    1,
     () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
-        estado = 17; // Cambiar al siguiente estado
+         // Cambiar al siguiente estado
         manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+        estado = 15;
       }
     }
   );
+  pop();
+}
 
-  if (handInside) {
-    boton("VER EJEMPLOS", ancho - ancho / 7, alto - alto / 8, 300, 100, 51, 160, 72);
-  }
 
-  
+function drawEstado15() {
+  push();
+  image(imagenes[6], 0, 0, ancho, alto);
+  image(imagenes[9], 0, 0, ancho, alto);
+  pop();
+  push();
+  detectHoverAndClick(
+    ancho/5 ,
+     alto /2 -50,
+    300,
+    150,
+    1,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+         // Cambiar al siguiente estado
+        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+        estado = 16;
+      }
+    }
+  );
+  pop();
+}
+
+
+function drawEstado16() {
+  push();
+  image(imagenes[6], 0, 0, ancho, alto);
+  image(imagenes[8], 0, 0, ancho, alto);
+  pop();
+  push();
+  detectHoverAndClick(
+    ancho/2 - 150,
+    alto /2,
+   250,
+   150,
+   1,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+         // Cambiar al siguiente estado
+        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+        estado = 17;
+      }
+    }
+  );
+  pop();
 }
 
 function drawEstado17() {
-  push();
-  blendMode(DIFFERENCE);
-  image(imagenes[13], 0, 0, ancho, alto);
-  pop();
-  textAlign(CENTER, TOP);
   
-  boton("CONTINUAR", ancho - ancho / 7, alto - alto / 8, 300, 100, 160, 51, 142);
-
+  push();
+  image(imagenes[10], 0, 0, ancho, alto);
+  pop();
+  push();
+  // for (let i = 0; i < faces.length; i++) {
+  //   let face = faces[i];
+  //   for (let j = 0; j < face.keypoints.length; j++) {
+  //     let keypoint = face.keypoints[j];
+  //     fill(0, 255, 0);
+  //     noStroke();
+  //     circle(keypoint.x, keypoint.y, 5);
+  //   }
+  // }
   detectHoverAndClick(
-    ancho - ancho / 7 - 150,
-    alto - alto / 8 - 150,
-    300,
-    300,
+    ancho - 250,
     0,
+    150,
+    150,
+    1,
     () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
-        estado = 18; // Cambiar al siguiente estado
-        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+        estado = 16; // Cambiar al siguiente estado
+        manoCerradaDuracion = 1; // Si la mano no está cerrada, reiniciar el contador
       }
     }
   );
 
-  push();
-  imageMode(CENTER);
-  image (ejMotionCapture, ancho/2, alto/2.5, ancho-ancho/6, alto- alto/3);
+  detectHoverAndClick(
+    ancho / 1.75,
+    alto - alto / 5,
+    200,
+    200,
+    1,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+        
+        if (mostrarventana < 3){
+          mostrarventana +=1 ; // Cambiar al siguiente estado
+          } else if (mostrarventana == 3 ){
+            mostrarventana = 0;
+          }
+        manoCerradaDuracion = 1; // Si la mano no está cerrada, reiniciar el contador
+      }
+    }
+  );
+
+  detectHoverAndClick(
+    ancho / 3.95,
+    alto - alto / 5,
+    200,
+    200,
+    1,
+    () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+        if (mostrarventana > 0){
+          mostrarventana -=1 ; // Cambiar al siguiente estado
+          } else if (mostrarventana == 0 ){
+            mostrarventana = 3;
+          }
+        manoCerradaDuracion = 1; // Si la mano no está cerrada, reiniciar el contador
+      }
+    }
+  );
   pop();
 
-  if (handInside) {
-    boton("CONTINUAR", ancho - ancho / 7, alto - alto / 8, 300, 100, 51, 160, 72);
-  }
-
+  if (mostrarventana == 0){
+    for (let i = 0; i < faces.length; i++) {
+      let face = faces[i];
+        let keypoint = face.keypoints[6];
+        fill(0, 255, 0);
+        noStroke();
+        circle(keypoint.x, keypoint.y, 5);
+        push();
+        imageMode(CENTER);        
+        image(mascara[0], keypoint.x, keypoint.y, 200, 200);
+         pop();
+    }
+  } else  if (mostrarventana == 1){
+    for (let i = 0; i < faces.length; i++) {
+      let face = faces[i];
+        let keypoint = face.keypoints[6];
+        fill(0, 255, 0);
+        noStroke();
+        circle(keypoint.x, keypoint.y, 5);
+        push();
+        imageMode(CENTER);        
+        image(mascara[1], keypoint.x, keypoint.y, 200, 200);
+         pop();
+    }
+  } else  if (mostrarventana == 2){
+    for (let i = 0; i < faces.length; i++) {
+      let face = faces[i];
+        let keypoint = face.keypoints[6];
+        fill(0, 255, 0);
+        noStroke();
+        circle(keypoint.x, keypoint.y, 5);
+        push();
+        imageMode(CENTER);        
+        image(mascara[2], keypoint.x, keypoint.y, 200, 200);
+         pop();
+    }  } else  if (mostrarventana == 3){
+      for (let i = 0; i < faces.length; i++) {
+        let face = faces[i];
+          let keypoint = face.keypoints[6];
+          fill(0, 255, 0);
+          noStroke();
+          circle(keypoint.x, keypoint.y, 5);
+          push();
+          imageMode(CENTER);        
+          image(mascara[3], keypoint.x, keypoint.y, 200, 200);
+           pop();
+      }  }  
+  
+  
 }
 
 
