@@ -2,6 +2,10 @@
 // Definir un valor de referencia de distancia máxima para una mano completamente abierta (ajustable según pruebas)
 let maxOpenDistance = 80; // Tamaño en px en pantalla de una mano completamente abierta
 let minClosedDistance = 20; // Tamaño en px en pantalla de una mano completamente cerrada
+
+let estado = 17; // Control de las pantallas/estados
+let mostrarventana = -1;
+
 let cursor = [];
 let num = 0;
 let agrandar = true;
@@ -12,7 +16,6 @@ let options = { maxFaces: 1, refineLandmarks: false, flipped: false };
 let video;
 let hands = [];
 let faces = [];
-let estado = 2; // Control de las pantallas/estados
 let estadoMano = ""; // Variable para almacenar el estado de la mano (abierta o cerrada)
 let manoCerradaDuracion = 0; // Contador para la duración de la mano cerrada
 let tiempoMaximo = 40; // 2 segundos en frames (asumiendo 60 FPS)
@@ -56,14 +59,16 @@ let jersey;
 let contador = 0;
 let altoEstado10 = 150;
 let anchorect, altorect;
-let mostrarventana = 0;
 let etrenando = 0;
 let estado12 = false;
 let estado13 = false;
 let modeBlend = false;
 let circlegif;
+let tam = 0;
+let c = [];
+
 function preload() {
-  handPose = ml5.handPose();
+  handPose = ml5.handPose({ backend: "webgl" });
   faceMesh = ml5.faceMesh(options);
   gif = loadImage("data/gifcarga.gif");
   alerta = loadImage("data/alerta.png");
@@ -115,17 +120,21 @@ function setup() {
   // pantalla 10
   for (let i = 0; i < manosImagenes.length; i++) {
     manoData.push({
-      x: random(50, ancho - 100),
-      y: random(50, alto - 100),
+      x: random(50, ancho - 150),
+      y: random(50, alto - 150),
     });
     manoData2.push({
-      x: random(-150, ancho - 150),
-      y: random(-150, alto - 150),
+      x: random(-100, ancho - 200),
+      y: random(-100, alto - 200),
     });
   }
 
   anchorect = 0;
   altorect = 0;
+
+  for (let i = 0; i < 4; i++) {
+    c[i] = random(0, 255);
+  }
 }
 
 function draw() {
@@ -198,7 +207,7 @@ function draw() {
     volver();
   }
 
-  if (estado > 3) {
+  if (estado > 3 && estado != 10) {
     cursorDraw(hands);
   }
 
@@ -259,7 +268,7 @@ function detectHoverAndClick(bx, by, bw, bh, mostrarBoton, callback) {
     }
 
     // Detectar si la mano está cerrada (basado en la distancia entre los dedos)
-     isHandClosed = isHandClosedCheck(hand);
+    isHandClosed = isHandClosedCheck(hand);
 
     // Si todos los keypoints están dentro del botón y la mano está cerrada, ejecutar el callback
     if (isHovering) {
@@ -383,7 +392,7 @@ function writeText(textToWrite, x, y, speed, startDelay = 0) {
 }
 
 function boton(texto, posx, posy, tamx, tamy) {
-  if (!handInside ) {
+  if (!handInside) {
     push();
     rectMode(CENTER, CENTER);
     textAlign(CENTER, CENTER);
@@ -395,7 +404,6 @@ function boton(texto, posx, posy, tamx, tamy) {
     fill(0);
     text(texto, posx, posy);
     pop();
-
   } else if (handInside) {
     push();
     stroke(160);
@@ -431,10 +439,8 @@ function boton(texto, posx, posy, tamx, tamy) {
       fill(0);
       text(texto, posx, posy);
       pop();
-      
     }
-  } 
-  
+  }
 }
 
 function volver() {
@@ -525,9 +531,12 @@ function drawHandBoxWithText(hands, textMessage) {
     // Dibujar el texto a la derecha del rectángulo
     noStroke();
     fill(255);
-    textAlign(LEFT, CENTER);
-    textSize(24);
-    text(textMessage, maxX + 10, (minY + maxY) / 2); // Texto centrado verticalmente al lado derecho del rectángulo
+    stroke(0);
+    textSize(40);
+    textLeading(30);
+    strokeWeight(4);
+    textAlign(CENTER, CENTER);
+    text(textMessage, (minX + maxX) / 2, minY - 50); // Texto centrado verticalmente al lado derecho del rectángulo
   }
 }
 
@@ -660,15 +669,18 @@ function drawEstado2() {
     blendMode(DIFFERENCE);
     image(imagenes[3], 0, 0, ancho, alto);
   }
- 
+
   pop();
   textAlign(CENTER, TOP);
   if (handInside) {
     push();
-    blendMode(MULTIPLY);
-    image(imagenes[13], 0, 0, ancho, alto);
+    blendMode(DIFFERENCE);
     image(imagenes[3], 0, 0, ancho, alto);
-   // image(imagenes[13], 0, 0, ancho, alto);
+    blendMode(BURN);
+    image(imagenes[13], 0, 0, ancho, alto);
+    // image(imagenes[13], 0, 0, ancho, alto);
+    pop();
+    push();
     writeText(
       "PARA HACER CLICK SOBRE\nLOS BOTONES, CERRÁ TU MANO",
       ancho / 2,
@@ -677,8 +689,20 @@ function drawEstado2() {
       0
     );
     pop();
+    push();
+    // Draw all the tracked hand points
+    for (let i = 0; i < hands.length; i++) {
+      let hand = hands[i];
+      for (let j = 0; j < hand.keypoints.length; j++) {
+        let keypoint = hand.keypoints[j];
+        fill(0, 255, 0);
+        noStroke();
+        circle(keypoint.x, keypoint.y, 10);
+      }
+    }
+    pop();
   }
-  
+
   textAlign(CENTER, TOP);
   // Escribir texto en el estado 1
   if (!handInside) {
@@ -1053,7 +1077,7 @@ function drawEstado8() {
     pop();
     push();
     writeText(
-      "PRIMERO DEBEMOS MOSTRAR EJEMPLOS DE MANOS ABIERTAS",
+      "PRIMERO, DEBEMOS MOSTRAR EJEMPLOS DE MANOS ABIERTAS PARA QUE\nPUEDA RECONOCER LOS PATRONES QUE SE REPITEN EN TODAS LAS MANOS",
       ancho / 4.5,
       alto / 2.9,
       50,
@@ -1110,7 +1134,7 @@ function drawEstado8() {
 
       push();
       imageMode(CENTER);
-      image(entrenando, ancho / 2, alto / 2, 960, 540);
+      image(entrenando, ancho / 2, alto / 2, 650, 367);
       pop();
 
       if (contador > 239) {
@@ -1169,6 +1193,9 @@ function drawEstado9() {
 
 function drawEstado10() {
   contador++;
+  if (opennessPercentage == undefined) {
+    opennessPercentage = 0;
+  }
   // push();
   // blendMode(DIFFERENCE);
   // image(imagenes[10], 0, 0, ancho, alto);
@@ -1209,19 +1236,24 @@ function drawEstado10() {
     pop();
     contador++;
     if (contador > 180) {
-            mostrarventana=0;
+      mostrarventana = 0;
       estado = 11;
       contador = 0;
     }
   }
   // Llamar a la función con el mensaje deseado
   if (agrandar == true) {
-    drawHandBoxWithText(hands, "Mano abierta:" + opennessPercentage);
-    drawHandBoxWithText(hands, " ");
+    push();
+    drawHandBoxWithText(hands, opennessPercentage + "%\nABIERTA");
+    //drawHandBoxWithText(hands, " ");
+    pop();
   }
 }
 
 function drawEstado11() {
+  //PARA AGILIZAR CORRECCION
+  estado12 = true;
+  estado13 = true;
   push();
   image(imagenes[6], 0, 0, ancho, alto);
   imageMode(CENTER);
@@ -1232,99 +1264,100 @@ function drawEstado11() {
   textAlign(LEFT, TOP);
 
   if (!estado12 || !estado13) {
-  if (mostrarventana == 0) {
-    ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
-    fill(255);
-    let texto1 = writeText(
-      "¡MUY BIEN! YA VIMOS CÓMO FUNCIONA LA DETECCIÓN DEL CUERPO\nMEDIANTE EL USO DEL MACHINE LEARNING",
-      ancho / 7,
-      alto / 3.7,
-      50,
-      0
-    );
-    if (texto1) {
-      setTimeout(() => {
-        mostrarventana = 1;
-        writeText.state = null;
-      }, 500); // Cambiar de estado después de que el texto se haya completado
+    if (mostrarventana == 0) {
+      ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
+      fill(255);
+      let texto1 = writeText(
+        "¡MUY BIEN! YA VIMOS CÓMO FUNCIONA LA DETECCIÓN DEL CUERPO\nMEDIANTE EL USO DEL MACHINE LEARNING",
+        ancho / 7,
+        alto / 3.7,
+        50,
+        0
+      );
+      if (texto1) {
+        setTimeout(() => {
+          mostrarventana = 1;
+          writeText.state = null;
+        }, 500); // Cambiar de estado después de que el texto se haya completado
+      }
+    }
+    if (mostrarventana == 1) {
+      push();
+      ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
+      ventana1(ancho / 6, alto / 4, 150, "COMPARACIÓN");
+      pop();
+      let texto1 = writeText(
+        "ESTE MÉTODO EXISTE SÓLO HACE ALGUNOS AÑOS, Y SE PROFESIONALIZÓ A LA PAR DE\nLA INTELIGENCIA ARTIFICIAL",
+        ancho / 5.3,
+        alto / 3,
+        50,
+        0
+      );
+      if (texto1) {
+        setTimeout(() => {
+          mostrarventana = 2;
+          writeText.state = null;
+        }, 500); // Cambiar de estado después de que el texto se haya completado
+      }
+    }
+    if (mostrarventana == 2) {
+      push();
+      ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
+      ventana1(ancho / 6, alto / 4, 150, "COMPARACIÓN");
+      ventana1(ancho / 9, alto / 3, 150, "COMPARACIÓN");
+      pop();
+      let texto1 = writeText(
+        "ANTES DEL CRECIMIENTO DE LA IA Y DEL MACHINE LEARNING,\nDETECTAR EL CUERPO HUMANO ERA MUCHO MÁS COMPLEJO",
+        ancho / 7.7,
+        alto / 2.4,
+        50,
+        0
+      );
+      if (texto1) {
+        setTimeout(() => {
+          writeText.state = null;
+          mostrarventana = 3;
+        }, 500); // Cambiar de estado después de que el texto se haya completado
+      }
+    }
+    if (mostrarventana == 3) {
+      push();
+      ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
+      ventana1(ancho / 6, alto / 4, 150, "COMPARACIÓN");
+      ventana1(ancho / 9, alto / 3, 150, "COMPARACIÓN");
+      pop();
+      let texto1 = writeText(
+        "ACCEDÉ A LAS CARPETAS PARA COMPARAR LOS DOS MÉTODOS",
+        ancho / 7.7,
+        alto / 2.4,
+        50,
+        0
+      );
+      if (texto1) {
+        setTimeout(() => {
+          writeText.state = null;
+          mostrarventana = 4;
+        }, 3000); // Cambiar de estado después de que el texto se haya completado
+      }
     }
   }
-  if (mostrarventana == 1) {
-    push();
-    ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
-    ventana1(ancho / 6, alto / 4, 150, "COMPARACIÓN");
-    pop();
-    let texto1 = writeText(
-      "ESTE MÉTODO EXISTE SÓLO HACE ALGUNOS AÑOS, Y SE PROFESIONALIZÓ A LA PAR DE\nLA INTELIGENCIA ARTIFICIAL",
-      ancho / 5.3,
-      alto / 3,
-      50,
-      0
-    );
-    if (texto1) {
-      setTimeout(() => {
-        mostrarventana = 2;
-        writeText.state = null;
-      }, 500); // Cambiar de estado después de que el texto se haya completado
-    }
-  }
-  if (mostrarventana == 2) {
-    push();
-    ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
-    ventana1(ancho / 6, alto / 4, 150, "COMPARACIÓN");
-    ventana1(ancho / 9, alto / 3, 150, "COMPARACIÓN");
-    pop();
-    let texto1 = writeText(
-      "ANTES DEL CRECIMIENTO DE LA IA Y DEL MACHINE LEARNING,\nDETECTAR EL CUERPO HUMANO ERA MUCHO MÁS COMPLEJO",
-      ancho / 7.7,
-      alto / 2.4,
-      50,
-      0
-    );
-    if (texto1) {
-      setTimeout(() => {
-        writeText.state = null;
-        mostrarventana = 3;
-      }, 500); // Cambiar de estado después de que el texto se haya completado
-    }
-  }
-  if (mostrarventana == 3) {
-    push();
-    ventana1(ancho / 7.8, alto / 5, 150, "COMPARACIÓN");
-    ventana1(ancho / 6, alto / 4, 150, "COMPARACIÓN");
-    ventana1(ancho / 9, alto / 3, 150, "COMPARACIÓN");
-    pop();
-    let texto1 = writeText(
-      "ACCEDÉ A LAS CARPETAS PARA COMPARAR LOS DOS MÉTODOS",
-      ancho / 7.7,
-      alto / 2.4,
-      50,
-      0
-    );
-    if (texto1) {
-      setTimeout(() => {
-        writeText.state = null;
-        mostrarventana = 4;
-      }, 3000); // Cambiar de estado después de que el texto se haya completado
-    }
-  }
-  }
+  //BOTON IA (IZQ)
   if (mostrarventana == 4) {
     detectHoverAndClick(ancho / 5.5, alto / 4, 350, 300, 0, () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
         mostrarventana = 2;
-        estado = 13; // Cambiar al siguiente estado
+        estado = 12; // Cambiar al siguiente estado
         esperaDeBotones = 0;
       }
     });
+    //BOTON TRADICIONAL (DER)
     detectHoverAndClick(ancho - ancho / 2.1, alto / 4, 300, 250, 0, () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
-        mostrarventana = 2;
-        estado = 12; // Cambiar al siguiente estado
+        mostrarventana = 0;
+        estado = 13; // Cambiar al siguiente estado
         esperaDeBotones = 0;
-
       }
     });
     pop();
@@ -1336,13 +1369,47 @@ function drawEstado11() {
           // Cambiar al siguiente estado
           contador = 0;
           manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+
+          esperaDeBotones = 0;
+          mostrarventana = 5;
+        }
+      });
+      boton("CONCLUSIÓN", ancho / 2, alto / 1.25, 175, 70);
+    }
+  } else if (mostrarventana == 5) {
+    push();
+    ventana1(ancho / 8, alto / 4, 400, "CONCLUSIÓN");
+    pop();
+    push();
+    let texto1 = writeText(
+      "EL MOTION CAPTURE TRADICIONAL ES IDEAL PARA PROYECTOS QUE NECESITEN GRAN\nDETALLE Y CALIDAD TÉCNICA, MIENTRAS QUE LA CAPTURA CON INTELIGENCIA ARTIFICIAL\nES PERFECTA PARA PROYECTOS RÁPIDOS, ECONÓMICOS O EXPERIMENTALES,\nDONDE SE PRIORICE LA ACCESIBILIDAD ANTES QUE LA PRECISIÓN",
+      ancho / 7.3,
+      alto / 3,
+      10,
+      0
+    );
+    blendMode(MULTIPLY);
+    fill(0, 255, 0);
+    rect(ancho / 7.3, alto / 2.6, 307, 30);
+    rect(ancho / 2.45, alto / 2.25, 500, 30);
+    pop();
+
+    // Dibujar el botón
+    detectHoverAndClick(
+      ancho / 1.35 - 200,
+      alto - alto / 3.5 - 150,
+      400,
+      300,
+      0,
+      () => {
+        if (manoCerradaDuracion >= tiempoMaximo) {
           estado = 14;
           esperaDeBotones = 0;
           mostrarventana = 0;
         }
-      });
-      boton("CONTINUAR", ancho / 2, alto / 1.25, 175, 70);
-    }
+      }
+    );
+    boton("CONTINUAR", ancho / 1.35, alto - alto / 3.5, 300, 70);
   }
 }
 
@@ -1351,23 +1418,25 @@ function drawEstado12() {
   image(imagenes[6], 0, 0, ancho, alto);
   imageMode(CENTER);
   image(pc[mostrarventana], ancho / 2, alto / 2);
-  if (mostrarventana == 0) {
-    image(tradicionalFinal, ancho / 2, alto / 2, 575, 321);
+  if (mostrarventana == 2) {
+    image(gifMachineLearning, ancho / 2, alto / 2);
   }
   pop();
   //Cambio de estado
+  //VIDEO
   detectHoverAndClick(ancho / 5 + 50, alto / 9, 250, 150, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
-      mostrarventana = 0; // Cambiar al siguiente estado
+      mostrarventana = 2; // Cambiar al siguiente estado
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       esperaDeBotones = 0;
     }
   });
+  //DATA
   detectHoverAndClick(ancho / 2.5, alto / 9, 250, 150, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
-      mostrarventana = 1;
+      mostrarventana = 3;
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       esperaDeBotones = 0;
     }
@@ -1383,7 +1452,7 @@ function drawEstado12() {
       mostrarventana = 4;
     }
   });
-  boton("CERRAR", ancho/1.52, alto/1.18, 195, 55);
+  boton("CERRAR", ancho / 1.52, alto / 1.18, 195, 55);
   drawHandBoxWithText(hands, " ");
 }
 
@@ -1392,23 +1461,25 @@ function drawEstado13() {
   image(imagenes[6], 0, 0, ancho, alto);
   imageMode(CENTER);
   image(pc[mostrarventana], ancho / 2, alto / 2);
-  if (mostrarventana == 2) {
-    image(gifMachineLearning, ancho / 2, alto / 2);
+  if (mostrarventana == 0) {
+    image(tradicionalFinal, ancho / 2, alto / 2, 575, 321);
   }
   pop();
   //Cambio de estado
+  //VIDEO
   detectHoverAndClick(ancho / 5 + 50, alto / 9, 250, 150, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
-      mostrarventana = 2; // Cambiar al siguiente estado
+      mostrarventana = 0; // Cambiar al siguiente estado
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       esperaDeBotones = 0;
     }
   });
+  //DATA
   detectHoverAndClick(ancho / 2.5, alto / 9, 250, 150, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
-      mostrarventana = 3;
+      mostrarventana = 1;
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       esperaDeBotones = 0;
     }
@@ -1421,11 +1492,9 @@ function drawEstado13() {
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       esperaDeBotones = 0;
       mostrarventana = 4;
-
     }
   });
-  boton("CERRAR", ancho/1.52, alto/1.18, 195, 55);
-
+  boton("CERRAR", ancho / 1.52, alto / 1.18, 195, 55);
 
   drawHandBoxWithText(hands, " ");
 }
@@ -1436,15 +1505,66 @@ function drawEstado14() {
   image(imagenes[7], 0, 0, ancho, alto);
   pop();
   push();
-  detectHoverAndClick(0, alto / 2 - 120, 300, 200, 0, () => {
-    // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
-    if (manoCerradaDuracion >= tiempoMaximo) {
-      // Cambiar al siguiente estado
-      manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
-      esperaDeBotones = 0;
-      estado = 15;
+  if (mostrarventana == 0) {
+    push();
+    ventana2(ancho / 9, alto / 7, 400, "CONCLUSIÓN");
+    pop();
+    push();
+    imageMode(CENTER);
+    image(alerta, ancho / 3, alto / 2.7, 200, 200);
+    pop();
+    push();
+    textAlign(TOP, LEFT);
+    let texto1 = writeText(
+      "AHORA QUE YA CONOCES CÓMO LA INTELIGENCIA ARTIFICIAL TRANSFORMÓ LA\nINDUSTRIA DEL CINE Y DE LA PRODUCCIÓN VISUAL CON EFECTOS ESPECIALES,\nVEAMOS CÓMO PODRÍAMOS UTILIZARLA EN ALGO DIVERTIDO",
+      ancho / 8,
+      alto / 1.9,
+      20,
+      0
+    );
+
+    if (texto1) {
+      setTimeout(() => {
+        writeText.state = null;
+        mostrarventana = 1;
+      }, 1500); // Cambiar de estado después de que el texto se haya completado
     }
-  });
+  } else if (mostrarventana == 1) {
+    push();
+    ventana2(ancho / 9, alto / 7, 400, "CONCLUSIÓN");
+    ventana2(ancho / 4.5, alto / 3, 400, "CONCLUSIÓN");
+    pop();
+    push();
+    imageMode(CENTER);
+    image(alerta, ancho / 1.8, alto / 1.8, 200, 200);
+    pop();
+    push();
+    textAlign(TOP, LEFT);
+    let texto1 = writeText(
+      "EN LA SIGUIENTE PANTALLA BUSCÁ LA WEBCAM,\nVAS A PODER PERSONALIZAR TU IMÁGEN Y SACAR UNA FOTO!\nSUBILA A TUS REDES Y ETIQUETANOS ;)",
+      ancho / 4,
+      alto / 1.4,
+      20,
+      0
+    );
+
+    if (texto1) {
+      setTimeout(() => {
+        writeText.state = null;
+        mostrarventana = 2;
+      }, 3000); // Cambiar de estado después de que el texto se haya completado
+    }
+  } else if (mostrarventana == 2) {
+    detectHoverAndClick(0, alto / 2 - 120, 300, 200, 1, () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+        // Cambiar al siguiente estado
+        manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
+        esperaDeBotones = 0;
+        estado = 15;
+      }
+    });
+  }
   pop();
 }
 
@@ -1480,12 +1600,15 @@ function drawEstado16() {
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       estado = 17;
       esperaDeBotones = 0;
+      mostrarventana = -1;
+      contador = 0;
     }
   });
   pop();
 }
 
 function drawEstado17() {
+  contador++;
   push();
   image(imagenes[10], 0, 0, ancho, alto);
   pop();
@@ -1508,14 +1631,56 @@ function drawEstado17() {
       esperaDeBotones = 0;
     }
   });
-   //Boton sacar foto
-   detectHoverAndClick(ancho /2 + 75, alto/2 + 75, 150, 150, 1, () => {
+
+  if (mostrarventana == -1) {
+    if (tam < 10) {
+      tam += 0.3;
+    } else if (tam > 8) {
+      tam = 0;
+    }
+    for (let i = 0; i < 4; i++) {
+      if (c[i] < 255) {
+        c[i] += 1;
+      } else if (c[i] > 255) {
+        c[i] = 0;
+      }
+    }
+
+    let texto1 = writeText("CALIBRANDO...", ancho / 2, alto / 7, 20, 0);
+
+    if (texto1) {
+      setTimeout(() => {
+        writeText.state = null;
+        texto1 = false;
+      }, 500); // Cambiar de estado después de que el texto se haya completado
+    }
+    // Draw all the tracked face points
+    for (let i = 0; i < faces.length; i++) {
+      let face = faces[i];
+      for (let j = 0; j < face.keypoints.length; j++) {
+        let keypoint = face.keypoints[j];
+        push;
+        fill(c[0], c[1],0);
+        noStroke();
+        rectMode(CENTER);
+        rect(keypoint.x, keypoint.y, tam + i * 2, tam + i * 2);
+        pop();
+      }
+    }
+
+    if (contador > 600) {
+      mostrarventana = 0;
+    }
+  }
+
+  //Boton sacar foto
+  detectHoverAndClick(ancho / 2 + 75, alto / 2 + 75, 150, 150, 1, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       video.pause();
     }
   });
-//Boton der
+  //Boton der
   detectHoverAndClick(ancho / 1.75, alto - alto / 5, 200, 200, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
@@ -1528,7 +1693,7 @@ function drawEstado17() {
       esperaDeBotones = 0;
     }
   });
-//Boton izq
+  //Boton izq
   detectHoverAndClick(ancho / 3.95, alto - alto / 5, 200, 200, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
