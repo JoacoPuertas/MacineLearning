@@ -42,6 +42,7 @@ let mascara = [];
 let ia;
 let tradicional;
 let pc = [];
+let webcam = [];
 let tradicionalFinal;
 let botonEstado7 = false;
 // variables codigo antiguo
@@ -74,7 +75,7 @@ function preload() {
   faceMesh = ml5.faceMesh(options);
   gif = loadImage("data/gifcarga.gif");
   alerta = loadImage("data/alerta.png");
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 17; i++) {
     imagenes[i] = loadImage("data/pantalla" + i + ".png");
   }
 
@@ -84,12 +85,15 @@ function preload() {
   tradicionalFinal = loadImage("data/tradicionalfinal.gif");
   gifMachineLearning = loadImage("data/gifmachinelearning.gif");
   gifPersona = loadImage("data/visual.gif");
-  for (let i = 0; i <= 3; i++) {
+  for (let i = 0; i <= 6; i++) {
     mascara[i] = loadImage("data/mascaras/" + i + ".png");
   }
 
   for (let i = 0; i <= 3; i++) {
     pc[i] = loadImage("data/pc/" + i + ".png");
+  }
+  for (let i = 0; i <= 10; i++) {
+    webcam[i] = loadImage("data/wecam/" + i + ".png");
   }
   //carpetitas
   ia = loadImage("data/ia.png");
