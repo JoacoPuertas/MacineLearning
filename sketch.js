@@ -5,12 +5,15 @@ let minClosedDistance = 20; // Tamaño en px en pantalla de una mano completamen
 let numText = 5;
 let frameCounter2 = 0;
 let fotoSacada = false;
-let estado = 18; // Control de las pantallas/estados
-let mostrarventana = -1;
-
+let estado = 15; // Control de las pantallas/estados
+let mostrarventana = 0;
+let gifestado1;
+let doblecontrol = false;
 let cursor = [];
 let num = 0;
 let agrandar = true;
+let ventanaY = 10 ; // Inicia desde la parte superior
+
 let logo;
 let handPose;
 let faceMesh;
@@ -61,7 +64,8 @@ let esperaDeBotones = 0;
 let jersey;
 let contador = 0;
 let altoEstado10 = 150;
-let anchorect, altorect;
+let anchorect = 885;
+let altorect = 200;
 let etrenando = 0;
 let estado12 = false;
 let estado13 = false;
@@ -75,7 +79,7 @@ function preload() {
   faceMesh = ml5.faceMesh(options);
   gif = loadImage("data/gifcarga.gif");
   alerta = loadImage("data/alerta.png");
-  for (let i = 0; i < 17; i++) {
+  for (let i = 0; i < 18; i++) {
     imagenes[i] = loadImage("data/pantalla" + i + ".png");
   }
 
@@ -85,6 +89,8 @@ function preload() {
   tradicionalFinal = loadImage("data/tradicionalfinal.gif");
   gifMachineLearning = loadImage("data/gifmachinelearning.gif");
   gifPersona = loadImage("data/visual.gif");
+  gifestado1 = loadImage("data/gifestado1.gif");
+
   for (let i = 0; i <= 6; i++) {
     mascara[i] = loadImage("data/mascaras/" + i + ".png");
   }
@@ -134,9 +140,6 @@ function setup() {
       y: random(-100, alto - 200),
     });
   }
-
-  anchorect = 0;
-  altorect = 0;
 
   for (let i = 0; i < 4; i++) {
     c[i] = random(0, 255);
@@ -211,7 +214,7 @@ function draw() {
 
     // Agregar más pantallas si es necesario
   }
-  if (estado >= 4 && estado != 17 && estado != 12 && estado != 13) {
+  if (estado >= 4 && estado != 17 && estado != 12 && estado != 13  && estado != 18  ) {
     reiniciar();
     volver();
   }
@@ -453,17 +456,6 @@ function boton(texto, posx, posy, tamx, tamy) {
 }
 
 function volver() {
-  push();
-  textAlign(CENTER, CENTER);
-  fill(220);
-  stroke(60);
-  strokeWeight(3);
-  rect(10, 10, 150, 60);
-  noStroke();
-  fill(0);
-  textSize(30);
-  text("VOLVER", 85, 35);
-  pop();
   detectHoverAndClick(0, 0, 200, 200, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
@@ -471,27 +463,65 @@ function volver() {
       manoCerradaDuracion = 1; // Si la mano no está cerrada, reiniciar el contador
     }
   });
+  boton("VOLVER", 85, 40, 150, 60);
+
+  // push();
+  // textAlign(CENTER, CENTER);
+  // fill(220);
+  // stroke(60);
+  // strokeWeight(3);
+  // rect(10, 10, 150, 60);
+  // noStroke();
+  // fill(0);
+  // textSize(30);
+  // text("VOLVER", 85, 35);
+  // pop();
+ 
 }
 
 function reiniciar() {
-  push();
-  textAlign(CENTER, CENTER);
-  fill(220);
-  stroke(60);
-  strokeWeight(3);
-  rect(ancho - 160, 10, 150, 60);
-  noStroke();
-  fill(0);
-  textSize(30);
-  text("REINICIAR", ancho - 85, 35);
-  pop();
+
   detectHoverAndClick(ancho - 200, 0, 200, 200, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
-      estado = 0; // Cambiar al siguiente estado
+      doblecontrol=true; // Cambiar al siguiente estado
       manoCerradaDuracion = 1; // Si la mano no está cerrada, reiniciar el contador
     }
   });
+  boton("REINICIAR", ancho-85, 40, 150, 60);
+
+  if(doblecontrol){
+    ventana2( ancho/8, alto/6, 200, "REINICIAR")
+    push();
+    textAlign(LEFT, TOP);
+    text("ESTÁS SEGURX DE QUE QUERÉS REINICIAR?", ancho/7, alto/4 );
+   rectMode(LEFT, TOP);
+    detectHoverAndClick(ancho/1.8 , alto/4,  300, 150,0, () => {
+      // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
+      if (manoCerradaDuracion >= tiempoMaximo) {
+        estado=0;
+        mostrarventana=0;
+        doblecontrol=false;
+        contador =0;
+        
+      }
+    });
+    boton("REINICIAR", ancho/1.4, alto/2.8, 150, 60);
+    pop();
+  }
+
+  // push();
+  // textAlign(CENTER, CENTER);
+  // fill(220);
+  // stroke(60);
+  // strokeWeight(3);
+  // rect(ancho - 160, 10, 150, 60);
+  // noStroke();
+  // fill(0);
+  // textSize(30);
+  // text("REINICIAR", ancho - 85, 35);
+  // pop();
+ 
 }
 
 function cursorDraw(hands) {
@@ -601,6 +631,32 @@ function ventana2(x, y, height, title) {
   text(title.toUpperCase(), x + padding, y + titleHeight / 2);
   pop();
 }
+function ventana2expansible(x, y, width ,height, title) {
+  const titleHeight = 40; // Altura del recuadro del título
+  const padding = 30; // Espaciado interno
+  const fontSizeTitle = 40;
+  push();
+  strokeWeight(5);
+  stroke(0);
+  // Fondo del cuerpo
+  fill(220); // Negro
+  rect(x, y + titleHeight, width, height - titleHeight);
+
+  fill(0);
+  rect(x +10, y + 10 + titleHeight, width - 20, height - titleHeight - 20);
+
+  // Fondo del título
+  fill(220); // Gris
+  rect(x, y, width, titleHeight);
+  pop();
+  // Título
+  push();
+  fill(0); // Blanco
+  textSize(fontSizeTitle);
+  textAlign(LEFT, CENTER);
+  text(title.toUpperCase(), x + padding, y + titleHeight / 2);
+  pop();
+}
 
 function drawEstado0() {
   push();
@@ -653,17 +709,22 @@ function drawEstado0() {
 }
 
 function drawEstado1() {
-  image(imagenes[2], 0, 0, ancho, alto);
   push();
-  textAlign(CENTER, TOP);
+  blendMode(DIFFERENCE);
+  image(gifestado1, 0, 0, ancho, alto);
+  // image(gifestado1, 0, 0, ancho, alto);
+  pop();
+  push();
+  textAlign(LEFT, TOP);
   handInside = false;
   // Escribir texto en el estado 1
 
   textLeading(48);
+  ventana1(ancho/8,alto/4,130,"HOLA MUNDO");
   let isTextComplete = writeText(
-    "ESTA ES UNA INFOGRAFIA\nSOBRE MACHINE LEARNING\nEN EL MUNDO DEL CINE",
-    ancho / 2,
-    alto / 4,
+    "ESTA ES UNA INFOGRAFIA SOBRE MACHINE LEARNING EN EL MUNDO DEL CINE",
+    ancho / 7,
+    alto / 2.9,
     50,
     0
   );
@@ -683,7 +744,7 @@ function drawEstado2() {
   }
 
   pop();
-  textAlign(CENTER, TOP);
+  textAlign(LEFT, TOP);
   if (handInside) {
     push();
     blendMode(DIFFERENCE);
@@ -693,10 +754,11 @@ function drawEstado2() {
     // image(imagenes[13], 0, 0, ancho, alto);
     pop();
     push();
+    ventana1(ancho/8,alto/ 7, 150, "INTERACCIÓN");
     writeText(
-      "PARA HACER CLICK SOBRE\nLOS BOTONES, CERRÁ TU MANO",
-      ancho / 2,
-      alto / 6,
+      "PARA HACER CLICK SOBRE LOS BOTONES, CERRÁ TU MANO",
+      ancho/7,
+      alto / 4.5,
       50,
       0
     );
@@ -715,18 +777,24 @@ function drawEstado2() {
     pop();
   }
 
-  textAlign(CENTER, TOP);
+  textAlign(LEFT, TOP);
   // Escribir texto en el estado 1
   if (!handInside) {
+    ventana1(ancho/8,alto/ 7, 150, "INTERACCIÓN");
     writeText(
-      "PARA COMENZAR, COLOCA LA PALMA DE TU MANO\nSOBRE EL RECUADRO",
-      ancho / 2,
-      alto / 6,
+      "PARA COMENZAR, COLOCA LA PALMA DE TU MANO SOBRE EL RECUADRO",
+      ancho/7,
+      alto / 4.5,
       50,
       0
     );
   }
-
+  push();
+  stroke(255,0,0);
+  strokeWeight(5);
+  fill(255,0);
+  rect(150, 297, 330, 330);
+  pop();
   // Ejecuta la animación de texto del estado 2
   // Llamamos a la función que detecta hover y clic sobre el botón
   detectHoverAndClick(150, 290, 350, 350, 0, () => {
@@ -791,7 +859,7 @@ function drawEstado4() {
     }
   }
   if (mostrarventana == 1) {
-    ventana2(ancho / 4, alto / 6, 570, "ALERTA");
+    ventana2(ancho / 4, alto / 6, 370, "ALERTA");
 
     // Dibujar la imagen de alerta
     push();
@@ -805,8 +873,8 @@ function drawEstado4() {
     textAlign(LEFT, TOP);
     texto1 = writeText(
       "A PARTIR DE AHORA, CADA VEZ QUE QUIERAS\nSELECCIONAR UN BOTON DEBERÁS PONER LA MANO\nSOBRE ÉL Y CERRAR EL PUÑO",
-      ancho / 3.5,
-      alto / 3 + 160,
+      ancho / 2.1,
+      alto / 3.2,
       50,
       0
     );
@@ -814,8 +882,8 @@ function drawEstado4() {
 
     // Dibujar el botón
     detectHoverAndClick(
-      ancho / 1.3 - 200,
-      alto - alto / 8 - 150,
+      ancho / 1.25 - 200,
+      alto/1.67 - 150,
       400,
       300,
       0,
@@ -826,21 +894,28 @@ function drawEstado4() {
         }
       }
     );
-    boton("CONTINUAR", ancho / 1.3, alto - alto / 8, 300, 70);
+    boton("CONTINUAR", ancho / 1.25, alto/1.67, 300, 70);
   }
   if (mostrarventana == 2) {
-    ventana2(ancho / 4, alto / 6, 570, "ALERTA");
-    boton("CONTINUAR", ancho / 1.3, alto - alto / 8, 300, 70);
-    ventana2(ancho / 9, alto / 4, 500, "MENSAJE");
+    ventana2(ancho / 4, alto / 6, 370, "ALERTA");
+    push();
+    imageMode(LEFT, TOP);
+    image(alerta, ancho / 3.5, alto / 3.5, 200, 200);
+    pop();
+    text("A PARTIR DE AHORA, CADA VEZ QUE QUIERAS\nSELECCIONAR UN BOTON DEBERÁS PONER LA MANO\nSOBRE ÉL Y CERRAR EL PUÑO",
+      ancho / 2.1,
+      alto / 3.2,)
+    boton("CONTINUAR", ancho / 1.25, alto/1.67, 300, 70);
+    ventana2(ancho / 9, alto / 2, 275, "MENSAJE");
 
     // Escribir el texto
     push();
     fill(255);
     textAlign(LEFT, TOP);
     texto1 = writeText(
-      "VAMOS A EMPEZAR A ENTENDER QUÉ ES\nEL MACHINE LEARNING",
+      "VAMOS A EMPEZAR A ENTENDER QUÉ ES EL MACHINE LEARNING",
       ancho / 8 + 20,
-      alto / 3 + 20,
+      alto / 1.7 + 20,
       50,
       0
     );
@@ -848,11 +923,11 @@ function drawEstado4() {
 
     // Dibujar el botón
     detectHoverAndClick(
-      ancho / 1.6 - 200,
-      alto / 1.2 - 150,
+      ancho / 1.51 - 200,
+      alto / 1.3 - 150,
       400,
       300,
-      1,
+      0,
       () => {
         if (manoCerradaDuracion >= tiempoMaximo) {
           mostrarventana = 0;
@@ -861,7 +936,7 @@ function drawEstado4() {
         }
       }
     );
-    boton("CONTINUAR", ancho / 1.6, alto / 1.2, 300, 70);
+    boton("CONTINUAR", ancho / 1.51, alto / 1.25, 300, 70);
   }
   cursorDraw(hands);
   // volver();
@@ -1021,7 +1096,7 @@ function drawEstado7() {
     ventana1(ancho / 7.5, alto / 5, 300, "INTRODUCCIÓN");
     pop();
     let texto1 = writeText(
-      "PERO ESTO MUY ABSTRACTO, VEÁMOSLO EN UN EJEMPLO CONCRETO",
+      "PERO ESTO ES MUY ABSTRACTO, VEÁMOSLO EN UN EJEMPLO CONCRETO",
       ancho / 5.9,
       alto / 3.5,
       50,
@@ -1149,7 +1224,7 @@ function drawEstado8() {
       image(entrenando, ancho / 2, alto / 2, 650, 367);
       pop();
 
-      if (contador > 239) {
+      if (contador > 120) {
         contador = 0;
         estado = 9;
       }
@@ -1165,88 +1240,100 @@ function drawEstado9() {
   blendMode(DIFFERENCE);
   image(imagenes[2], 0, 0, ancho, alto);
   pop();
-  ventana2(200, alto / 8, alto - alto / 6, "ALERTA");
+  ventana2(ancho / 4, alto / 6, 370, "ALERTA");
 
   // Dibujar la imagen de alerta
   push();
-  imageMode(CENTER, CENTER);
-  image(alerta, ancho / 2, alto / 3 + 50, 200, 200);
-  pop();
+    imageMode(LEFT, TOP);
+    image(alerta, ancho / 3.7, alto / 3.7, 190, 190);
+    pop();
 
   // Escribir el texto
   push();
   fill(255);
   textAlign(LEFT, TOP);
   writeText(
-    "Ahora la inteligencia artificial tiene la capacidad \n de detectar cuándo una mano está abierta. \n PONGÁMOSLO A  PRUEBA!",
-    ancho / 5,
-    alto / 3 + 150,
-    50,
-    0
-  );
-  pop();
+    "AHORA LA INTELIGENCIA ARTIFICIAL TIENE LA CAPACIDAD\nDE DETECTAR CUÁNDO UNA MANO ESTÁ ABIERTA\n¡PONGÁMOSLO A  PRUEBA!",
+    ancho / 2.3,
+      alto / 3.6,
+      50,
+      0
+    );
+    pop();
 
-  // Dibujar el botón
-  detectHoverAndClick(
-    ancho / 2 - 200,
-    alto - alto / 8 - 200,
-    400,
-    300,
-    0,
-    () => {
-      if (manoCerradaDuracion >= tiempoMaximo) {
-        estado = 10; // Cambiar al siguiente estado
-        esperaDeBotones = 0;
+    // Dibujar el botóN
+    detectHoverAndClick(
+      ancho / 1.25 - 200,
+      alto/1.67 - 150,
+      400,
+      300,
+      0,
+      () => {
+        if (manoCerradaDuracion >= tiempoMaximo) {
+          estado = 10;
+          mostrarventana = 0;
+          esperaDeBotones = 0;
+        }
       }
-    }
-  );
-  boton("PROBAR", ancho / 2, alto - alto / 8 - 50, 300, 70);
+    );
+    boton("PROBAR", ancho / 1.25, alto/1.67, 300, 70);
 }
 
 function drawEstado10() {
   contador++;
-  if (opennessPercentage == undefined) {
+
+  if (opennessPercentage === undefined) {
     opennessPercentage = 0;
   }
-  // push();
-  // blendMode(DIFFERENCE);
-  // image(imagenes[10], 0, 0, ancho, alto);
-  // pop();
-  ventana2(ancho / 6.5, 10, altoEstado10, "DETECCION AUTOMATICA");
+
+  // Calcular las posiciones ajustadas
+  let ventanaX = (ancho - anchorect) / 2; // Mantener la ventana centrada horizontalmente
+
+  // Dibujar la ventana expansible
+  ventana2expansible(ventanaX, ventanaY, anchorect, altoEstado10, "DETECCION AUTOMATICA");
+
+  // Mostrar el porcentaje de mano abierta
   push();
   textAlign(CENTER, TOP);
   fill(255);
-  text("MANO ABIERTA DETECTADA AL  " + opennessPercentage + "%", ancho / 2, 90);
+  text("MANO ABIERTA DETECTADA AL " + opennessPercentage + "%", ancho / 2, 90);
   pop();
-  push()
-  text(anchorect, 100, 100);
+
+  // Expansión de la ventana
   if (contador > 500) {
-    altoEstado10 += 3;
-    if (altoEstado10 > 500 && agrandar == true) {
-      altoEstado10 = 501;
-      push();
-      rectMode(CENTER, CENTER);
-      fill(0);
-      altorect += 10;
-      anchorect += 15;
-      rect(ancho / 2, alto / 2, anchorect, altorect);
-      pop();
-      if (anchorect > ancho) {
-        agrandar = false;
-        contador = 0;
-      }
+    if (altoEstado10 > 500) {
+      ventanaY -= 3 ; // Subir proporcionalmente al cambio de altura
+    }
+    if (altoEstado10 < 500) {
+      // Crece solo en altura hasta llegar a 500
+      altoEstado10 += 3;
+    } else {
+      // Crece tanto en altura como en ancho
+      altoEstado10 += 15; // Seguir creciendo en altura
+      anchorect += 15; // Crecer en ancho proporcionalmente
+    }
+
+    // Limitar el crecimiento
+    if (anchorect > ancho * 1.2) {
+      agrandar = false; // Detener el crecimiento
+      contador = 0;
     }
   }
-  text(agrandar, 200, 100);
-  if (agrandar == false) {
-    fill(0);
-    rect(0, 0, ancho, alto);
+
+  // Mostrar estado de expansión para depuración
+  push();
+  text("Agrandar: " + agrandar, 200, 100);
+  pop();
+
+  // Finalización del estado cuando agrandar es falso
+  if (agrandar === false) {
+    // Fondo negro con logo
     background(0);
-    fill(255);
     push();
     imageMode(CENTER, CENTER);
     image(logo, ancho / 2, alto / 2);
     pop();
+
     contador++;
     if (contador > 180) {
       mostrarventana = 0;
@@ -1254,15 +1341,16 @@ function drawEstado10() {
       contador = 0;
     }
   }
-  pop();
-  // Llamar a la función con el mensaje deseado
-  if (agrandar == true) {
+
+  // Llamar a la función para dibujar la caja de texto de la mano abierta
+  if (agrandar === true) {
     push();
     drawHandBoxWithText(hands, opennessPercentage + "%\nABIERTA");
-    //drawHandBoxWithText(hands, " ");
     pop();
   }
 }
+
+
 
 function drawEstado11() {
   //PARA AGILIZAR CORRECCION
@@ -1355,6 +1443,7 @@ function drawEstado11() {
   }
   //BOTON IA (IZQ)
   if (mostrarventana == 4) {
+    if (!doblecontrol){
     detectHoverAndClick(ancho / 5.5, alto / 4, 350, 300, 0, () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
@@ -1373,7 +1462,7 @@ function drawEstado11() {
       }
     });
     pop();
-
+  }
     if (estado12 && estado13) {
       detectHoverAndClick(ancho / 2 - 130, alto - alto / 3, 300, 200, 0, () => {
         // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
@@ -1465,7 +1554,7 @@ function drawEstado12() {
     }
   });
   boton("CERRAR", ancho / 1.52, alto / 1.18, 195, 55);
-  drawHandBoxWithText(hands, " ");
+  
 }
 
 function drawEstado13() {
@@ -1513,17 +1602,16 @@ function drawEstado13() {
 
 function drawEstado14() {
   push();
-  image(imagenes[6], 0, 0, ancho, alto);
   image(imagenes[7], 0, 0, ancho, alto);
   pop();
   push();
   if (mostrarventana == 0) {
     push();
-    ventana2(ancho / 9, alto / 7, 400, "CONCLUSIÓN");
+    ventana2(ancho / 9, alto / 7, 400, "ATENCIÓN");
     pop();
     push();
     imageMode(CENTER);
-    image(alerta, ancho / 3, alto / 2.7, 200, 200);
+    image(webcam[0], ancho / 4, alto / 2.8, 150, 150);
     pop();
     push();
     textAlign(TOP, LEFT);
@@ -1543,12 +1631,13 @@ function drawEstado14() {
     }
   } else if (mostrarventana == 1) {
     push();
-    ventana2(ancho / 9, alto / 7, 400, "CONCLUSIÓN");
-    ventana2(ancho / 4.5, alto / 3, 400, "CONCLUSIÓN");
+    ventana2(ancho / 9, alto / 7, 400, "ATENCIÓN");
+    image(webcam[0], ancho / 4, alto / 2.8, 150, 150);
+    ventana2(ancho / 4.5, alto / 3, 400, "WEBCAM");
     pop();
     push();
     imageMode(CENTER);
-    image(alerta, ancho / 1.8, alto / 1.8, 200, 200);
+    image(webcam[7], ancho / 3, alto / 2, 100, 100);
     pop();
     push();
     textAlign(TOP, LEFT);
@@ -1567,7 +1656,7 @@ function drawEstado14() {
       }, 3000); // Cambiar de estado después de que el texto se haya completado
     }
   } else if (mostrarventana == 2) {
-    detectHoverAndClick(0, alto / 2 - 120, 300, 200, 1, () => {
+    detectHoverAndClick(0, alto / 2.4 , 300, 200, 0, () => {
       // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
       if (manoCerradaDuracion >= tiempoMaximo) {
         // Cambiar al siguiente estado
@@ -1576,25 +1665,37 @@ function drawEstado14() {
         estado = 15;
       }
     });
+    if(handInside){
+      image(imagenes[8], 0, 0, ancho, alto);
+    }
+    if(isHandClosed){
+      image(imagenes[14], 0, 0, ancho, alto);
+    }
   }
   pop();
 }
 
 function drawEstado15() {
   push();
-  image(imagenes[6], 0, 0, ancho, alto);
-  image(imagenes[8], 0, 0, ancho, alto);
+  image(imagenes[9], 0, 0, ancho, alto);
   pop();
   push();
-  detectHoverAndClick(ancho / 5, alto / 2 - 50, 300, 150, 0, () => {
+  detectHoverAndClick(ancho/6, alto / 2, 300, 150, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       // Cambiar al siguiente estado
       manoCerradaDuracion = 0; // Si la mano no está cerrada, reiniciar el contador
       estado = 17;
       esperaDeBotones = 0;
+      mostrarventana= -1;
     }
   });
+  if(handInside){
+    image(imagenes[15], 0, 0, ancho, alto);
+  }
+  if(isHandClosed){
+    image(imagenes[16], 0, 0, ancho, alto);
+  }
   pop();
 }
 
@@ -1635,7 +1736,7 @@ function drawEstado17() {
   //   }
   // }
   //Boton cerrar
-  detectHoverAndClick(ancho - 250, 0, 150, 150, 1, () => {
+  detectHoverAndClick(ancho - 250, 0, 150, 150, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       estado = 16; // Cambiar al siguiente estado
@@ -1657,9 +1758,12 @@ function drawEstado17() {
         c[i] = 0;
       }
     }
-
-    let texto1 = writeText("CALIBRANDO...", ancho / 2, alto / 7, 20, 0);
-
+push()
+fill(0)
+textAlign(LEFT, CENTER);
+textSize(40);
+    let texto1 = writeText("CALIBRANDO...", ancho / 2-50, alto / 5.5, 20, 0);
+pop()
     if (texto1) {
       setTimeout(() => {
         writeText.state = null;
@@ -1675,7 +1779,8 @@ function drawEstado17() {
         fill(c[0], c[1],0);
         noStroke();
         rectMode(CENTER);
-        rect(keypoint.x, keypoint.y, tam + i * 2, tam + i * 2);
+        stroke(255);
+        rect(keypoint.x, keypoint.y, tam + (j/100), tam + j / 100);
         pop();
       }
     }
@@ -1686,19 +1791,27 @@ function drawEstado17() {
   }
 
   //Boton sacar foto
-  detectHoverAndClick(ancho / 2 - alto/6, alto / 2 + alto/3, 150, 150, 1, () => {
+  detectHoverAndClick(ancho / 2.5, alto /1.4, 300, 250, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       fotoSacada = true;
-      mostrarventana = 0;
-    }
+          }
   });
+  push()
+  imageMode(CENTER)
+  if (handInside){
+    image(webcam[8], ancho/2, alto/1.1);
+  if (isHandClosed){
+    image(webcam[9], ancho/2, alto/1.1);
+  }
+  }
+  pop()
 
   if (fotoSacada) {
     pausarVideo();
   }
   //Boton der
-  detectHoverAndClick(ancho / 1.75, alto - alto / 5, 200, 200, 0, () => {
+  detectHoverAndClick(ancho / 1.3, alto/3, 200, 300, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       if (mostrarventana < 3) {
@@ -1710,8 +1823,18 @@ function drawEstado17() {
       esperaDeBotones = 0;
     }
   });
+  push()
+  imageMode(CENTER)
+  image(webcam[1], ancho/1.2, alto/2);
+  if (handInside){
+    image(webcam[2], ancho/1.2, alto/2);
+  if (isHandClosed){
+    image(webcam[3], ancho/1.2, alto/2);
+  }
+  }
+  pop()
   //Boton izq
-  detectHoverAndClick(ancho / 3.95, alto - alto / 5, 200, 200, 0, () => {
+  detectHoverAndClick(ancho / 8, alto/3, 200, 300, 0, () => {
     // Si la mano permanece cerrada durante el tiempo máximo, cambiamos de estado
     if (manoCerradaDuracion >= tiempoMaximo) {
       if (mostrarventana > 0) {
@@ -1723,6 +1846,15 @@ function drawEstado17() {
       esperaDeBotones = 0;
     }
   });
+  push()
+  imageMode(CENTER)
+  image(webcam[4], ancho/6.5, alto/2);
+  if (handInside){
+  image(webcam[5], ancho/6.5, alto/2);
+   if (isHandClosed){
+    image(webcam[6], ancho/6.5, alto/2);
+   }
+  }
   pop();
 
   if (mostrarventana == 0) {
@@ -1779,7 +1911,7 @@ function drawEstado18() {
     push();
     textAlign(TOP, LEFT);
     writeText(
-      "GRACIAS POR MIRAR NUESTRA INFORGRAFIA\nELEGÍ SI QUERES VOLVER A LA WEBCAM O FINALIZAR",
+      "GRACIAS POR MIRAR NUESTRA INFOGRAFIA\nELEGÍ SI QUERES VOLVER A LA WEBCAM O FINALIZAR",
       ancho / 5.6,
       alto / 3.6,
       20,
@@ -1823,9 +1955,10 @@ function pausarVideo(){
   frameCounter++;
 
   // Ejecutar cada 30 frames (equivalente a 1 segundo)
-  if (frameCounter % 30 === 0) {
-    if (numText >= -10) {
+  if (frameCounter % 45 === 0) {
+    if (numText >= -20) {
       numText--; // Reducir el contador
+      tam=70;
     }
     
     
@@ -1836,16 +1969,32 @@ function pausarVideo(){
     textAlign(CENTER, CENTER);
     fill(0);
     stroke(255);
-    strokeWeight(3);
-    text(numText, ancho/2,alto/4);
+    strokeWeight(4);
+    textSize(tam+=2);
+    text(numText, ancho/2,alto/2);
     pop();
   }
 
   if(numText === 0) {
     video.pause();
   }
+
+  if(numText <= 0) {
+  image(imagenes[17], 0, 0);
+  push()
+  textAlign(LEFT, TOP);
+    writeText(
+      "COMPARTÍ ESTA FOTO EN INSTAGRAM Y ETIQUETANOS! ;)",
+      ancho / 3.5,
+      alto / 16,
+      30,
+      0
+    );
+
+
+  }
   
-  if(numText == -10) {
+  if(numText == -12) {
     estado = 18;
     video.play();
   }
